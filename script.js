@@ -62,6 +62,14 @@ function renderReferenceBurger() {
   }
 }
 
+function renderStack() {
+  renderBurger(stackEl, stack);
+}
+
+function renderReferenceBurger() {
+  renderBurger(referenceStackEl, correctOrder);
+}
+
 function setStatus(message, tone = '') {
   statusEl.textContent = message;
   statusEl.classList.remove('ok', 'bad');

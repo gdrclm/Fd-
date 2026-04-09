@@ -2,7 +2,6 @@
   --bg: #fff7ed;
   --card: #ffffff;
   --text: #1f2937;
-  --accent: #f97316;
   --ok: #16a34a;
   --bad: #dc2626;
 }
@@ -23,7 +22,7 @@ body {
 }
 
 .app {
-  width: min(720px, 100%);
+  width: min(900px, 100%);
   background: var(--card);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
@@ -94,7 +93,7 @@ h2 {
 }
 
 .status {
-  margin: 0;
+  margin: 0.5rem 0 0;
   font-weight: 600;
 }
 
@@ -147,14 +146,26 @@ button:active {
   background: #fecaca;
 }
 
-@media (max-width: 640px) {
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 760px) {
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+
   .app {
     padding: 1rem;
     border-radius: 12px;
-  }
-
-  .buttons {
-    grid-template-columns: 1fr;
   }
 
   .controls {
