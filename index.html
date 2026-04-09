@@ -10,20 +10,19 @@
     <main class="app">
       <h1>🍔 Бургер‑калькулятор</h1>
       <p class="hint">
-        Повтори эталонный бургер: выбирай ингредиенты и собирай его снизу вверх.
+        Справа показан эталонный бургер. Выбирай ингредиенты и собирай такой же
+        снизу вверх.
       </p>
 
-      <section class="preview-grid">
-        <section class="reference" aria-label="Пример правильного бургера">
-          <h2>Эталонный бургер</h2>
-          <div id="reference-stack" class="burger-canvas" role="img" aria-label="Эталонный бургер"></div>
-        </section>
+      <section class="reference" aria-label="Пример правильного бургера">
+        <h2>Эталонный бургер</h2>
+        <ul id="reference-stack" class="stack visual-stack"></ul>
+      </section>
 
-        <section class="display" aria-live="polite">
-          <h2>Твой бургер</h2>
-          <div id="stack" class="burger-canvas" role="img" aria-label="Бургер игрока"></div>
-          <p id="status" class="status">Начни с нижней булочки.</p>
-        </section>
+      <section class="display" aria-live="polite">
+        <h2>Текущий бургер</h2>
+        <ul id="stack" class="stack visual-stack"></ul>
+        <p id="status" class="status">Начни с нижней булочки.</p>
       </section>
 
       <section class="buttons" aria-label="Ингредиенты">
