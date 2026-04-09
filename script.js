@@ -7,6 +7,15 @@ const correctOrder = [
   'Верхняя булочка'
 ];
 
+const ingredientVisuals = {
+  'Нижняя булочка': '🥯',
+  'Котлета': '🥩',
+  'Сыр': '🧀',
+  'Лист салата': '🥬',
+  'Помидор': '🍅',
+  'Верхняя булочка': '🍞'
+};
+
 const stack = [];
 
 const stackEl = document.getElementById('stack');
@@ -116,6 +125,14 @@ function decorateIngredientButtons() {
     button.textContent = '';
     button.append(icon, label);
   });
+}
+
+function renderStack() {
+  renderBurger(stackEl, stack);
+}
+
+function renderReferenceBurger() {
+  renderBurger(referenceStackEl, correctOrder);
 }
 
 function setStatus(message, tone = '') {
