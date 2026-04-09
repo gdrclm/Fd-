@@ -7,6 +7,15 @@ const correctOrder = [
   'Верхняя булочка'
 ];
 
+const ingredientVisuals = {
+  'Нижняя булочка': '🥯',
+  'Котлета': '🥩',
+  'Сыр': '🧀',
+  'Лист салата': '🥬',
+  'Помидор': '🍅',
+  'Верхняя булочка': '🍞'
+};
+
 const stack = [];
 
 const stackEl = document.getElementById('stack');
