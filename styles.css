@@ -105,3 +105,42 @@ button:active {
 .clear {
   background: #fecaca;
 }
+
+@media (max-width: 640px) {
+  .app {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  .check,
+  .clear {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  body {
+    padding: 0.6rem;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  .hint {
+    font-size: 0.95rem;
+  }
+
+  button {
+    padding: 0.8rem;
+    font-size: 0.95rem;
+  }
+}
