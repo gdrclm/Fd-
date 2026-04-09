@@ -7,21 +7,58 @@ const correctOrder = [
   'Верхняя булочка'
 ];
 
+const ingredientVisuals = {
+  'Нижняя булочка': '🥯',
+  'Котлета': '🥩',
+  'Сыр': '🧀',
+  'Лист салата': '🥬',
+  'Помидор': '🍅',
+  'Верхняя булочка': '🍞'
+};
+
 const stack = [];
 
 const stackEl = document.getElementById('stack');
+const referenceStackEl = document.getElementById('reference-stack');
 const statusEl = document.getElementById('status');
 const ingredientButtons = document.querySelectorAll('[data-ingredient]');
 const checkButton = document.getElementById('check');
 const clearButton = document.getElementById('clear');
 
+function createIngredientItem(name) {
+  const li = document.createElement('li');
+  li.className = 'stack-item';
+
+  const icon = document.createElement('span');
+  icon.className = 'ingredient-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.textContent = ingredientVisuals[name] ?? '🍴';
+
+  const label = document.createElement('span');
+  label.className = 'ingredient-label';
+  label.textContent = name;
+
+  li.append(icon, label);
+  return li;
+}
+
 function renderStack() {
   stackEl.innerHTML = '';
 
-  for (const item of stack) {
-    const li = document.createElement('li');
-    li.textContent = item;
-    stackEl.appendChild(li);
+  // Показываем бургер как стопку: верхние слои визуально выше, нижняя булочка — внизу.
+  const visibleStack = [...stack].reverse();
+
+  for (const item of visibleStack) {
+    stackEl.appendChild(createIngredientItem(item));
+  }
+}
+
+function renderReferenceBurger() {
+  referenceStackEl.innerHTML = '';
+
+  // Эталон тоже отображаем сверху вниз для наглядного сравнения.
+  for (const item of [...correctOrder].reverse()) {
+    referenceStackEl.appendChild(createIngredientItem(item));
   }
 }
 
@@ -40,6 +77,11 @@ function isPrefixValid() {
 
 ingredientButtons.forEach((button) => {
   button.addEventListener('click', () => {
+    if (stack.length >= correctOrder.length) {
+      setStatus('Все слои уже добавлены. Нажми «Проверить» или «Сбросить».', 'bad');
+      return;
+    }
+
     stack.push(button.dataset.ingredient);
     renderStack();
 
@@ -49,7 +91,7 @@ ingredientButtons.forEach((button) => {
     }
 
     if (stack.length < correctOrder.length) {
-      setStatus('Хорошо! Продолжай собирать бургер.');
+      setStatus('Хорошо! Продолжай собирать бургер снизу вверх.');
     } else {
       setStatus('Все ингредиенты добавлены. Нажми «Проверить».');
     }
@@ -57,8 +99,13 @@ ingredientButtons.forEach((button) => {
 });
 
 checkButton.addEventListener('click', () => {
-  if (stack.length !== correctOrder.length) {
+  if (stack.length < correctOrder.length) {
     setStatus('Не хватает ингредиентов. Добавь все слои бургера.', 'bad');
+    return;
+  }
+
+  if (stack.length > correctOrder.length) {
+    setStatus('Добавлены лишние слои. Нажми «Сбросить» и собери заново.', 'bad');
     return;
   }
 
@@ -74,3 +121,6 @@ clearButton.addEventListener('click', () => {
   renderStack();
   setStatus('Сброс выполнен. Начни с нижней булочки.');
 });
+
+renderReferenceBurger();
+renderStack();

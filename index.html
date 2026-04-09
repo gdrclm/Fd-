@@ -10,13 +10,18 @@
     <main class="app">
       <h1>🍔 Бургер‑калькулятор</h1>
       <p class="hint">
-        Нажимай ингредиенты как кнопки калькулятора. Собери бургер в правильной
-        последовательности, чтобы пройти уровень.
+        Справа показан эталонный бургер. Выбирай ингредиенты и собирай такой же
+        снизу вверх.
       </p>
+
+      <section class="reference" aria-label="Пример правильного бургера">
+        <h2>Эталонный бургер</h2>
+        <ul id="reference-stack" class="stack visual-stack"></ul>
+      </section>
 
       <section class="display" aria-live="polite">
         <h2>Текущий бургер</h2>
-        <ol id="stack" class="stack"></ol>
+        <ul id="stack" class="stack visual-stack"></ul>
         <p id="status" class="status">Начни с нижней булочки.</p>
       </section>
 
