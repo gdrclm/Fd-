@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Бургер-Калькулятор</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>🍔 Бургер‑калькулятор</h1>
+      <p class="hint">
+        Нажимай ингредиенты как кнопки калькулятора. Собери бургер в правильной
+        последовательности, чтобы пройти уровень.
+      </p>
+
+      <section class="display" aria-live="polite">
+        <h2>Текущий бургер</h2>
+        <ol id="stack" class="stack"></ol>
+        <p id="status" class="status">Начни с нижней булочки.</p>
+      </section>
+
+      <section class="buttons" aria-label="Ингредиенты">
+        <button data-ingredient="Нижняя булочка">Нижняя булочка</button>
+        <button data-ingredient="Котлета">Котлета</button>
+        <button data-ingredient="Сыр">Сыр</button>
+        <button data-ingredient="Лист салата">Лист салата</button>
+        <button data-ingredient="Помидор">Помидор</button>
+        <button data-ingredient="Верхняя булочка">Верхняя булочка</button>
+      </section>
+
+      <div class="controls">
+        <button id="check" class="check">Проверить</button>
+        <button id="clear" class="clear">Сбросить</button>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
