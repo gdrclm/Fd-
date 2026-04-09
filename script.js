@@ -75,25 +75,56 @@ const ingredientSvgs = {
   `
 };
 
-function createIngredientLayer(name) {
-  const layer = document.createElement('div');
+function createIngredientLayer(name, stackIndex = null, interactive = false) {
+  const layer = document.createElement('button');
+  layer.type = 'button';
   layer.className = 'ingredient-layer';
   layer.innerHTML = ingredientSvgs[name] ?? ingredientSvgs['Нижняя булочка'];
 
+  if (interactive) {
+    layer.classList.add('ingredient-layer-clickable');
+    layer.dataset.stackIndex = String(stackIndex);
+    layer.title = `Удалить: ${name}`;
+  }
+
   const label = document.createElement('span');
   label.className = 'sr-only';
-  label.textContent = name;
+  label.textContent = interactive ? `${name}. Нажми, чтобы удалить.` : name;
   layer.appendChild(label);
 
   return layer;
 }
 
-function renderBurger(container, ingredients) {
+function renderBurger(container, ingredients, interactive = false) {
   container.innerHTML = '';
 
-  for (const ingredient of ingredients) {
-    container.appendChild(createIngredientLayer(ingredient));
-  }
+  ingredients.forEach((ingredient, index) => {
+    container.appendChild(createIngredientLayer(ingredient, index, interactive));
+  });
+}
+
+function renderStack() {
+  renderBurger(stackEl, stack, true);
+}
+
+function renderReferenceBurger() {
+  renderBurger(referenceStackEl, correctOrder, false);
+}
+
+function decorateIngredientButtons() {
+  ingredientButtons.forEach((button) => {
+    const ingredientName = button.dataset.ingredient;
+    const icon = document.createElement('span');
+    icon.className = 'button-icon';
+    icon.innerHTML = ingredientSvgs[ingredientName] ?? '';
+
+    const label = document.createElement('span');
+    label.className = 'button-label';
+    label.textContent = ingredientName;
+
+    button.textContent = '';
+    button.append(icon, label);
+  });
 }
 
 function renderStack() {
@@ -147,6 +178,25 @@ ingredientButtons.forEach((button) => {
   });
 });
 
+stackEl.addEventListener('click', (event) => {
+  const layer = event.target.closest('.ingredient-layer-clickable');
+
+  if (!layer) {
+    return;
+  }
+
+  const index = Number(layer.dataset.stackIndex);
+
+  if (Number.isNaN(index) || index < 0 || index >= stack.length) {
+    setStatus('Не удалось удалить слой. Попробуй снова.', 'bad');
+    return;
+  }
+
+  const removed = stack.splice(index, 1)[0];
+  renderStack();
+  setStatus(`Удален слой: ${removed}. Продолжай сборку.`);
+});
+
 checkButton.addEventListener('click', () => {
   if (stack.length < correctOrder.length) {
     setStatus('Не хватает ингредиентов. Добавь все слои бургера.', 'bad');
@@ -171,5 +221,6 @@ clearButton.addEventListener('click', () => {
   setStatus('Сброс выполнен. Начни с нижней булочки.');
 });
 
+decorateIngredientButtons();
 renderReferenceBurger();
 renderStack();
