@@ -34,11 +34,16 @@ h1 {
   margin: 0;
 }
 
+h2 {
+  margin: 0 0 0.5rem;
+}
+
 .hint {
   margin: 0.5rem 0 1rem;
   opacity: 0.9;
 }
 
+.reference,
 .display {
   border: 2px dashed #fdba74;
   border-radius: 12px;
@@ -46,10 +51,46 @@ h1 {
   background: #fffbeb;
 }
 
+.display {
+  margin-top: 0.85rem;
+}
+
 .stack {
+  list-style: none;
   margin: 0.5rem 0;
-  min-height: 7.5rem;
-  padding-left: 1.2rem;
+  min-height: 9rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.visual-stack {
+  justify-content: flex-start;
+}
+
+.stack-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 10px;
+  border: 1px solid #fed7aa;
+  background: #fff;
+  padding: 0.45rem 0.6rem;
+}
+
+.ingredient-icon {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #ffedd5;
+  font-size: 1.15rem;
+}
+
+.ingredient-label {
+  font-weight: 600;
 }
 
 .status {
