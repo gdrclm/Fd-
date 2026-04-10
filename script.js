@@ -30,6 +30,8 @@ let timerId = null;
 let gameLocked = false;
 let nextLayerId = 1;
 let dragState = null;
+let layerDragState = null;
+let fxIntervalId = null;
 
 const stackEl = document.getElementById('stack');
 const referenceStackEl = document.getElementById('reference-stack');
@@ -39,6 +41,12 @@ const timerEl = document.getElementById('timer');
 const ingredientsEl = document.getElementById('ingredients');
 const checkButton = document.getElementById('check');
 const clearButton = document.getElementById('clear');
+const overlayEl = document.getElementById('level-complete-overlay');
+const overlayTitleEl = document.getElementById('overlay-title');
+const celebrationBurgerEl = document.getElementById('celebration-burger');
+const fxLayerEl = document.getElementById('fx-layer');
+const restartLevelButton = document.getElementById('restart-level');
+const nextLevelButton = document.getElementById('next-level');
 
 function getCurrentOrder() { return levels[currentLevel]; }
 
@@ -125,18 +133,131 @@ function renderStack() {
     layer.style.left = `${item.x}px`;
     layer.style.top = `${item.y}px`;
     layer.style.zIndex = String(100 + index);
-    layer.title = `Удалить: ${item.name}`;
-    layer.addEventListener('click', () => {
+    layer.title = `Переместить: ${item.name}`;
+    layer.dataset.layerId = String(item.id);
+
+    layer.addEventListener('pointerdown', (event) => {
       if (gameLocked) return;
-      const layerIndex = placedLayers.findIndex((entry) => entry.id === item.id);
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      const targetLayer = placedLayers.find((entry) => entry.id === item.id);
+      if (!targetLayer) return;
+
+      const stackRect = stackEl.getBoundingClientRect();
+      const layerRect = layer.getBoundingClientRect();
+      layer.setPointerCapture(event.pointerId);
+      layer.classList.add('ingredient-layer-dragging');
+      layerDragState = {
+        pointerId: event.pointerId,
+        layerId: targetLayer.id,
+        offsetX: event.clientX - layerRect.left,
+        offsetY: event.clientY - layerRect.top,
+        width: layerRect.width,
+        height: layerRect.height,
+        stackRect
+      };
+      event.preventDefault();
+    });
+
+    layer.addEventListener('pointermove', (event) => {
+      if (!layerDragState || layerDragState.pointerId !== event.pointerId) return;
+      const targetLayer = placedLayers.find((entry) => entry.id === layerDragState.layerId);
+      if (!targetLayer) return;
+
+      const x = clamp(
+        event.clientX - layerDragState.stackRect.left - layerDragState.offsetX,
+        0,
+        Math.max(layerDragState.stackRect.width - layerDragState.width, 0)
+      );
+      const y = clamp(
+        event.clientY - layerDragState.stackRect.top - layerDragState.offsetY,
+        0,
+        Math.max(layerDragState.stackRect.height - layerDragState.height, 0)
+      );
+
+      targetLayer.x = x;
+      targetLayer.y = y;
+      layer.style.left = `${x}px`;
+      layer.style.top = `${y}px`;
+
+      const outsideDropzone = event.clientX < layerDragState.stackRect.left
+        || event.clientX > layerDragState.stackRect.right
+        || event.clientY < layerDragState.stackRect.top
+        || event.clientY > layerDragState.stackRect.bottom;
+      layer.classList.toggle('drop-active', outsideDropzone);
+    });
+
+    layer.addEventListener('pointerup', (event) => {
+      if (!layerDragState || layerDragState.pointerId !== event.pointerId) return;
+      const activeLayerId = layerDragState.layerId;
+      const localStackRect = layerDragState.stackRect;
+      layerDragState = null;
+      layer.classList.remove('ingredient-layer-dragging');
+      layer.classList.remove('drop-active');
+
+      const outsideDropzone = event.clientX < localStackRect.left
+        || event.clientX > localStackRect.right
+        || event.clientY < localStackRect.top
+        || event.clientY > localStackRect.bottom;
+
+      const layerIndex = placedLayers.findIndex((entry) => entry.id === activeLayerId);
       if (layerIndex < 0) return;
-      placedLayers.splice(layerIndex, 1);
+
+      if (outsideDropzone) {
+        const [removedLayer] = placedLayers.splice(layerIndex, 1);
+        renderStack();
+        setStatus(`Слой «${removedLayer.name}» удалён: ты вынес его за пределы бургера.`, 'bad');
+        return;
+      }
+
+      setStatus('Слой перемещён.');
       renderStack();
-      setStatus(`Удален слой: ${item.name}.`);
+    });
+
+    layer.addEventListener('pointercancel', (event) => {
+      if (!layerDragState || layerDragState.pointerId !== event.pointerId) return;
+      layerDragState = null;
+      layer.classList.remove('ingredient-layer-dragging');
+      layer.classList.remove('drop-active');
+      renderStack();
     });
 
     stackEl.appendChild(layer);
   });
+}
+
+function spawnFxParticle() {
+  const particle = document.createElement('span');
+  const symbols = ['✨', '⭐', '💥', '🎉'];
+  particle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+  particle.className = 'fx-particle';
+  particle.style.left = `${20 + Math.random() * 60}%`;
+  particle.style.top = `${15 + Math.random() * 65}%`;
+  particle.style.setProperty('--x', `${-60 + Math.random() * 120}px`);
+  particle.style.setProperty('--y', `${-80 + Math.random() * 140}px`);
+  particle.style.setProperty('--rot', `${-90 + Math.random() * 180}deg`);
+  fxLayerEl.appendChild(particle);
+  setTimeout(() => particle.remove(), 760);
+}
+
+function showLevelCompleteOverlay() {
+  overlayEl.hidden = false;
+  celebrationBurgerEl.innerHTML = '';
+  const placedOrder = getPlacedOrderByHeight();
+  const visualOrder = [...placedOrder].reverse();
+  visualOrder.forEach((ingredient) => {
+    celebrationBurgerEl.appendChild(createLayer(ingredient));
+  });
+
+  clearInterval(fxIntervalId);
+  for (let i = 0; i < 14; i += 1) spawnFxParticle();
+  fxIntervalId = setInterval(spawnFxParticle, 180);
+}
+
+function hideLevelCompleteOverlay() {
+  overlayEl.hidden = true;
+  clearInterval(fxIntervalId);
+  fxLayerEl.innerHTML = '';
+  celebrationBurgerEl.innerHTML = '';
 }
 
 function renderIngredientTray() {
@@ -240,6 +361,7 @@ function isPlacementOrderValid() {
 }
 
 function startLevel(levelIndex) {
+  hideLevelCompleteOverlay();
   currentLevel = levelIndex;
   placedLayers.length = 0;
   gameLocked = false;
@@ -267,13 +389,18 @@ checkButton.addEventListener('click', () => {
   }
 
   clearInterval(timerId);
+  gameLocked = true;
   if (currentLevel < levels.length - 1) {
+    overlayTitleEl.textContent = 'Уровень пройден';
+    nextLevelButton.hidden = false;
     setStatus(`🎉 Уровень ${currentLevel + 1} пройден!`, 'ok');
-    setTimeout(() => startLevel(currentLevel + 1), 700);
+    showLevelCompleteOverlay();
     return;
   }
 
-  gameLocked = true;
+  overlayTitleEl.textContent = '🏆 Все уровни пройдены!';
+  nextLevelButton.hidden = true;
+  showLevelCompleteOverlay();
   setStatus('🏆 Все уровни пройдены! Отличная сборка.', 'ok');
 });
 
@@ -285,6 +412,14 @@ clearButton.addEventListener('click', () => {
   renderIngredientTray();
   startTimer();
   setStatus('Сброс: ингредиенты перемешаны, таймер перезапущен.');
+});
+
+restartLevelButton.addEventListener('click', () => {
+  startLevel(currentLevel);
+});
+
+nextLevelButton.addEventListener('click', () => {
+  if (currentLevel < levels.length - 1) startLevel(currentLevel + 1);
 });
 
 startLevel(0);

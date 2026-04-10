@@ -161,6 +161,11 @@ h2 { margin: 0 0 0.45rem; font-size: 1.05rem; }
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
 }
 
+.ingredient-layer-dragging {
+  opacity: 0.75;
+  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.28));
+}
+
 .controls {
   margin-top: 0.85rem;
   display: flex;
@@ -179,11 +184,90 @@ button {
 .check { background: #fdba74; flex: 1; }
 .clear { background: #fecaca; }
 
+.level-complete-overlay[hidden] { display: none; }
+
+.level-complete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(17, 24, 39, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.level-complete-card {
+  width: min(560px, 100%);
+  background: linear-gradient(180deg, #fffbeb, #fff);
+  border-radius: 18px;
+  border: 2px solid #fdba74;
+  position: relative;
+  overflow: hidden;
+  padding: 1rem;
+  box-shadow: 0 24px 36px rgba(0, 0, 0, 0.35);
+}
+
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fx-particle {
+  position: absolute;
+  font-size: 1.3rem;
+  animation: fx-pop 750ms ease-out forwards;
+}
+
+.celebration-burger {
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+  animation: burger-enter 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.celebration-burger .ingredient-layer {
+  width: min(100%, 240px);
+}
+
+.overlay-title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.45rem;
+  color: #7c2d12;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.overlay-button {
+  flex: 1;
+}
+
+@keyframes burger-enter {
+  0% { transform: scale(0.4) translateY(24px); opacity: 0; }
+  55% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes fx-pop {
+  0% { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: translate(var(--x), var(--y)) scale(1.2) rotate(var(--rot)); opacity: 0; }
+}
+
 @media (max-width: 760px) {
   .burger-canvas { min-height: 220px; }
   .ingredient-layer { width: min(100%, 170px); }
   .ingredients-tray { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
   .ingredient-card-image { width: 100px; }
+  .overlay-actions { flex-direction: column; }
 }
 
 @media (max-width: 420px) {
