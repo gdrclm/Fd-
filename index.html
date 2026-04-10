@@ -9,9 +9,12 @@
   <body>
     <main class="app">
       <h1>🍔 Бургер‑калькулятор</h1>
-      <p id="level-info" class="level-info">Уровень 1</p>
+      <div class="meta-row">
+        <p id="level-info" class="level-info">Уровень 1</p>
+        <p id="timer" class="timer">⏱ 01:00</p>
+      </div>
       <p class="hint">
-        Повтори эталонный бургер: выбирай ингредиенты и собирай его снизу вверх.
+        Перетаскивай ингредиенты в бургер игрока в правильные места и уложись в 1 минуту.
       </p>
 
       <section class="preview-grid">
@@ -21,13 +24,13 @@
         </section>
 
         <section class="display" aria-live="polite">
-          <h2>Твой бургер</h2>
-          <div id="stack" class="burger-canvas" role="img" aria-label="Бургер игрока"></div>
-          <p id="status" class="status">Начни с нижней булочки.</p>
+          <h2>Твой бургер (drop zone)</h2>
+          <div id="stack" class="burger-canvas burger-dropzone" role="img" aria-label="Бургер игрока"></div>
+          <p id="status" class="status">Перетащи «Нижнюю булочку» в бургер.</p>
         </section>
       </section>
 
-      <section id="ingredients" class="buttons" aria-label="Ингредиенты"></section>
+      <section id="ingredients" class="ingredients-tray" aria-label="Ингредиенты для перетаскивания"></section>
 
       <div class="controls">
         <button type="button" id="check" class="check">Проверить</button>
