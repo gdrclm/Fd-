@@ -23,20 +23,13 @@ const levels = [
   ['Нижняя булочка', 'Котлета', 'Грибы', 'Сыр', 'Огурец', 'Лук', 'Бекон', 'Соус', 'Лист салата', 'Помидор', 'Верхняя булочка']
 ];
 
-const ingredientVisuals = {
-  'Нижняя булочка': '🥯',
-  'Котлета': '🥩',
-  'Сыр': '🧀',
-  'Лист салата': '🥬',
-  'Помидор': '🍅',
-  'Верхняя булочка': '🍞'
-};
-
-const stack = [];
+const placedLayers = [];
 let currentLevel = 0;
 let timeLeft = ROUND_TIME_SECONDS;
 let timerId = null;
 let gameLocked = false;
+let nextLayerId = 1;
+let dragState = null;
 
 const stackEl = document.getElementById('stack');
 const referenceStackEl = document.getElementById('reference-stack');
@@ -87,11 +80,7 @@ function setStatus(message, tone = '') {
   if (tone) statusEl.classList.add(tone);
 }
 
-function getVisualLayers(ingredients) {
-  return [...ingredients].reverse();
-}
-
-function createLayer(name, logicalIndex = null, interactive = false) {
+function createLayer(name, interactive = false) {
   const layer = document.createElement('button');
   layer.type = 'button';
   layer.className = 'ingredient-layer';
@@ -99,30 +88,56 @@ function createLayer(name, logicalIndex = null, interactive = false) {
 
   if (interactive) {
     layer.classList.add('ingredient-layer-clickable');
-    layer.title = `Удалить: ${name}`;
-    layer.addEventListener('click', () => {
-      if (gameLocked) return;
-      stack.splice(logicalIndex, 1);
-      renderStack();
-      setStatus(`Удален слой: ${name}.`);
-    });
   }
 
   return layer;
 }
 
-function renderBurger(container, ingredients, interactive = false) {
-  container.innerHTML = '';
-  const visual = getVisualLayers(ingredients);
-
-  visual.forEach((ingredient, visualIndex) => {
-    const logicalIndex = ingredients.length - 1 - visualIndex;
-    container.appendChild(createLayer(ingredient, logicalIndex, interactive));
+function renderReference() {
+  referenceStackEl.innerHTML = '';
+  const visual = [...getCurrentOrder()].reverse();
+  visual.forEach((ingredient) => {
+    const layer = createLayer(ingredient, false);
+    layer.classList.add('ingredient-layer-reference');
+    referenceStackEl.appendChild(layer);
   });
 }
 
-function renderStack() { renderBurger(stackEl, stack, true); }
-function renderReference() { renderBurger(referenceStackEl, getCurrentOrder(), false); }
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getSafePlacement(clientX, clientY) {
+  const rect = stackEl.getBoundingClientRect();
+  const layerWidth = Math.min(rect.width, 220);
+  const layerHeight = 48;
+  const x = clamp(clientX - rect.left - layerWidth / 2, 0, Math.max(rect.width - layerWidth, 0));
+  const y = clamp(clientY - rect.top - layerHeight / 2, 0, Math.max(rect.height - layerHeight, 0));
+  return { x, y };
+}
+
+function renderStack() {
+  stackEl.innerHTML = '';
+
+  placedLayers.forEach((item, index) => {
+    const layer = createLayer(item.name, true);
+    layer.style.position = 'absolute';
+    layer.style.left = `${item.x}px`;
+    layer.style.top = `${item.y}px`;
+    layer.style.zIndex = String(100 + index);
+    layer.title = `Удалить: ${item.name}`;
+    layer.addEventListener('click', () => {
+      if (gameLocked) return;
+      const layerIndex = placedLayers.findIndex((entry) => entry.id === item.id);
+      if (layerIndex < 0) return;
+      placedLayers.splice(layerIndex, 1);
+      renderStack();
+      setStatus(`Удален слой: ${item.name}.`);
+    });
+
+    stackEl.appendChild(layer);
+  });
+}
 
 function renderIngredientTray() {
   ingredientsEl.innerHTML = '';
@@ -130,49 +145,105 @@ function renderIngredientTray() {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'ingredient-card';
-    card.draggable = true;
     card.dataset.ingredient = ingredient;
-    card.innerHTML = `<span class="ingredient-card-image">${ingredientSvgs[ingredient]}</span><span class="ingredient-card-label">${ingredient}</span>`;
+    card.innerHTML = `<span class="ingredient-card-image">${ingredientSvgs[ingredient]}</span><span class="ingredient-card-label" hidden>${ingredient}</span>`;
 
-    card.addEventListener('dragstart', (event) => {
-      if (gameLocked) {
-        event.preventDefault();
+    card.addEventListener('click', () => {
+      const label = card.querySelector('.ingredient-card-label');
+      if (!label) return;
+      const visible = !label.hasAttribute('hidden');
+      if (visible) label.setAttribute('hidden', '');
+      else label.removeAttribute('hidden');
+      card.classList.toggle('ingredient-card-expanded', !visible);
+    });
+
+    card.addEventListener('pointerdown', (event) => {
+      if (gameLocked) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+      const pointerId = event.pointerId;
+      const dragGhost = card.cloneNode(true);
+      dragGhost.classList.add('drag-ghost');
+      dragGhost.classList.remove('ingredient-card-expanded');
+      dragGhost.style.left = `${event.clientX}px`;
+      dragGhost.style.top = `${event.clientY}px`;
+      document.body.appendChild(dragGhost);
+
+      card.setPointerCapture(pointerId);
+      dragState = {
+        ingredient,
+        card,
+        pointerId,
+        moved: false,
+        dragGhost
+      };
+
+      event.preventDefault();
+    });
+
+    card.addEventListener('pointermove', (event) => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      dragState.moved = true;
+      dragState.dragGhost.style.left = `${event.clientX}px`;
+      dragState.dragGhost.style.top = `${event.clientY}px`;
+
+      const rect = stackEl.getBoundingClientRect();
+      const inDropzone = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      stackEl.classList.toggle('drop-active', inDropzone);
+    });
+
+    card.addEventListener('pointerup', (event) => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      const localDrag = dragState;
+      dragState = null;
+      stackEl.classList.remove('drop-active');
+      localDrag.dragGhost.remove();
+
+      const rect = stackEl.getBoundingClientRect();
+      const inDropzone = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      if (!localDrag.moved || !inDropzone) return;
+
+      const maxLayers = getCurrentOrder().length;
+      if (placedLayers.length >= maxLayers) {
+        setStatus('Все слои уже на месте. Удали лишнее или проверь.', 'bad');
         return;
       }
-      event.dataTransfer.setData('text/plain', ingredient);
-      event.dataTransfer.effectAllowed = 'copy';
+
+      const { x, y } = getSafePlacement(event.clientX, event.clientY);
+      placedLayers.push({ id: nextLayerId, name: localDrag.ingredient, x, y });
+      nextLayerId += 1;
+      renderStack();
+      setStatus('Слой добавлен в точку, где ты отпустил палец.');
+    });
+
+    card.addEventListener('pointercancel', (event) => {
+      if (!dragState || dragState.pointerId !== event.pointerId) return;
+      dragState.dragGhost.remove();
+      dragState = null;
+      stackEl.classList.remove('drop-active');
     });
 
     ingredientsEl.appendChild(card);
   });
 }
 
-function getInsertIndexFromDrop(clientY) {
-  const layerEls = [...stackEl.querySelectorAll('.ingredient-layer')]; // top -> bottom
-
-  if (layerEls.length === 0) return 0;
-
-  for (let i = 0; i < layerEls.length; i += 1) {
-    const rect = layerEls[i].getBoundingClientRect();
-    const middle = rect.top + rect.height / 2;
-
-    if (clientY < middle) {
-      return stack.length - i;
-    }
-  }
-
-  return 0;
+function getPlacedOrderByHeight() {
+  return [...placedLayers]
+    .sort((a, b) => b.y - a.y)
+    .map((item) => item.name);
 }
 
-function isPrefixValid() {
+function isPlacementOrderValid() {
   const order = getCurrentOrder();
-  return stack.every((ing, i) => ing === order[i]);
+  const placedOrder = getPlacedOrderByHeight();
+  return placedOrder.every((ingredient, index) => ingredient === order[index]);
 }
 
 function startLevel(levelIndex) {
   currentLevel = levelIndex;
-  stack.length = 0;
+  placedLayers.length = 0;
   gameLocked = false;
+  nextLayerId = 1;
   levelInfoEl.textContent = `Уровень ${currentLevel + 1} из ${levels.length}`;
   renderReference();
   renderIngredientTray();
@@ -181,49 +252,17 @@ function startLevel(levelIndex) {
   setStatus('Перетаскивай ингредиенты в зону бургера.');
 }
 
-stackEl.addEventListener('dragover', (event) => {
-  if (gameLocked) return;
-  event.preventDefault();
-  event.dataTransfer.dropEffect = 'copy';
-  stackEl.classList.add('drop-active');
-});
-
-stackEl.addEventListener('dragleave', () => {
-  stackEl.classList.remove('drop-active');
-});
-
-stackEl.addEventListener('drop', (event) => {
-  event.preventDefault();
-  stackEl.classList.remove('drop-active');
-
-  if (gameLocked) return;
-
-  const ingredient = event.dataTransfer.getData('text/plain');
-  if (!ingredientSvgs[ingredient]) return;
-
-  const maxLayers = getCurrentOrder().length;
-  if (stack.length >= maxLayers) {
-    setStatus('Все слои уже на месте. Удали лишнее или проверь.', 'bad');
-    return;
-  }
-
-  const insertAt = getInsertIndexFromDrop(event.clientY);
-  stack.splice(insertAt, 0, ingredient);
-  renderStack();
-  setStatus('Слой добавлен. Продолжай сборку.');
-});
-
 checkButton.addEventListener('click', () => {
   if (gameLocked) return;
   const order = getCurrentOrder();
 
-  if (stack.length !== order.length) {
+  if (placedLayers.length !== order.length) {
     setStatus('Количество слоёв не совпадает с эталоном.', 'bad');
     return;
   }
 
-  if (!isPrefixValid()) {
-    setStatus('❌ Последовательность неверная. Перетасуй слои заново.', 'bad');
+  if (!isPlacementOrderValid()) {
+    setStatus('❌ Последовательность неверная. Проверь высоту слоёв.', 'bad');
     return;
   }
 
@@ -239,8 +278,9 @@ checkButton.addEventListener('click', () => {
 });
 
 clearButton.addEventListener('click', () => {
-  stack.length = 0;
+  placedLayers.length = 0;
   gameLocked = false;
+  nextLayerId = 1;
   renderStack();
   renderIngredientTray();
   startTimer();
