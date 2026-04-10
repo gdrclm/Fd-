@@ -2,14 +2,11 @@
   --bg: #fff7ed;
   --card: #ffffff;
   --text: #1f2937;
-  --accent: #f97316;
   --ok: #16a34a;
   --bad: #dc2626;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -23,53 +20,132 @@ body {
 }
 
 .app {
-  width: min(720px, 100%);
+  width: min(980px, 100%);
   background: var(--card);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
-h1 {
-  margin: 0;
+h1 { margin: 0; }
+h2 { margin: 0 0 0.45rem; font-size: 1.05rem; }
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.hint {
-  margin: 0.5rem 0 1rem;
-  opacity: 0.9;
+.level-info,
+.timer {
+  margin: 0.35rem 0 0;
+  font-weight: 700;
+  color: #9a3412;
 }
 
+.hint { margin: 0.45rem 0 0.8rem; }
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.reference,
 .display {
   border: 2px dashed #fdba74;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.65rem;
   background: #fffbeb;
 }
 
-.stack {
-  margin: 0.5rem 0;
-  min-height: 7.5rem;
-  padding-left: 1.2rem;
+.burger-canvas {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0.3rem;
 }
 
-.status {
-  margin: 0;
+.burger-dropzone {
+  border: 2px dashed transparent;
+  border-radius: 10px;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.burger-dropzone.drop-active {
+  border-color: #f97316;
+  background: #fff3dd;
+}
+
+.ingredient-layer {
+  width: min(100%, 220px);
+  margin-top: -26px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.14));
+}
+
+.ingredient-layer:first-child {
+  margin-top: 0;
+}
+
+.ingredient-layer svg {
+  width: 100%;
+  display: block;
+}
+
+.ingredient-layer-clickable { cursor: pointer; }
+.ingredient-layer-clickable:hover { transform: translateY(-1px); }
+
+.status { margin: 0.35rem 0 0; font-weight: 600; }
+.status.ok { color: var(--ok); }
+.status.bad { color: var(--bad); }
+
+.ingredients-tray {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 0.55rem;
+}
+
+.ingredient-card {
+  border: 1px solid #fdba74;
+  border-radius: 12px;
+  background: #fff;
+  cursor: grab;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.ingredient-card:active { cursor: grabbing; }
+
+.ingredient-card-image {
+  width: 128px;
+  max-width: 100%;
+}
+
+.ingredient-card-image svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ingredient-card-label {
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
-.status.ok {
-  color: var(--ok);
-}
-
-.status.bad {
-  color: var(--bad);
-}
-
-.buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 0.65rem;
-  margin-top: 1rem;
+.controls {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.6rem;
 }
 
 button {
@@ -78,69 +154,28 @@ button {
   color: #7c2d12;
   font-weight: 700;
   border-radius: 10px;
-  padding: 0.7rem 0.8rem;
-  cursor: pointer;
-  transition: transform 0.1s ease, filter 0.2s ease;
+  padding: 0.65rem 0.8rem;
 }
 
-button:hover {
-  filter: brightness(0.96);
-}
+.check { background: #fdba74; flex: 1; }
+.clear { background: #fecaca; }
 
-button:active {
-  transform: translateY(1px);
-}
-
-.controls {
-  margin-top: 1rem;
-  display: flex;
-  gap: 0.65rem;
-}
-
-.check {
-  background: #fdba74;
-  flex: 1;
-}
-
-.clear {
-  background: #fecaca;
-}
-
-@media (max-width: 640px) {
-  .app {
-    padding: 1rem;
-    border-radius: 12px;
-  }
-
-  .buttons {
-    grid-template-columns: 1fr;
-  }
-
-  .controls {
-    flex-direction: column;
-  }
-
-  .check,
-  .clear {
-    width: 100%;
-  }
+@media (max-width: 760px) {
+  .burger-canvas { min-height: 170px; }
+  .ingredient-layer { width: min(100%, 170px); margin-top: -20px; }
+  .ingredients-tray { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+  .ingredient-card-image { width: 100px; }
 }
 
 @media (max-width: 420px) {
-  body {
-    padding: 0.6rem;
-  }
-
-  h1 {
-    font-size: 1.35rem;
-  }
-
-  .hint {
-    font-size: 0.95rem;
-  }
-
-  button {
-    padding: 0.8rem;
-    font-size: 0.95rem;
-  }
+  body { padding: 0.5rem; }
+  h1 { font-size: 1.2rem; }
+  .hint { font-size: 0.88rem; }
+  .preview-grid { gap: 0.45rem; }
+  .reference, .display { padding: 0.5rem; }
+  .burger-canvas { min-height: 145px; }
+  .ingredient-layer { width: min(100%, 132px); margin-top: -16px; }
+  .ingredients-tray { grid-template-columns: repeat(2, minmax(95px, 1fr)); }
+  .ingredient-card-image { width: 82px; }
+  .controls { flex-direction: column; }
 }
