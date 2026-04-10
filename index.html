@@ -9,29 +9,29 @@
   <body>
     <main class="app">
       <h1>🍔 Бургер‑калькулятор</h1>
+      <p id="level-info" class="level-info">Уровень 1</p>
       <p class="hint">
-        Нажимай ингредиенты как кнопки калькулятора. Собери бургер в правильной
-        последовательности, чтобы пройти уровень.
+        Повтори эталонный бургер: выбирай ингредиенты и собирай его снизу вверх.
       </p>
 
-      <section class="display" aria-live="polite">
-        <h2>Текущий бургер</h2>
-        <ol id="stack" class="stack"></ol>
-        <p id="status" class="status">Начни с нижней булочки.</p>
+      <section class="preview-grid">
+        <section class="reference" aria-label="Пример правильного бургера">
+          <h2>Эталонный бургер</h2>
+          <div id="reference-stack" class="burger-canvas" role="img" aria-label="Эталонный бургер"></div>
+        </section>
+
+        <section class="display" aria-live="polite">
+          <h2>Твой бургер</h2>
+          <div id="stack" class="burger-canvas" role="img" aria-label="Бургер игрока"></div>
+          <p id="status" class="status">Начни с нижней булочки.</p>
+        </section>
       </section>
 
-      <section class="buttons" aria-label="Ингредиенты">
-        <button data-ingredient="Нижняя булочка">Нижняя булочка</button>
-        <button data-ingredient="Котлета">Котлета</button>
-        <button data-ingredient="Сыр">Сыр</button>
-        <button data-ingredient="Лист салата">Лист салата</button>
-        <button data-ingredient="Помидор">Помидор</button>
-        <button data-ingredient="Верхняя булочка">Верхняя булочка</button>
-      </section>
+      <section id="ingredients" class="buttons" aria-label="Ингредиенты"></section>
 
       <div class="controls">
-        <button id="check" class="check">Проверить</button>
-        <button id="clear" class="clear">Сбросить</button>
+        <button type="button" id="check" class="check">Проверить</button>
+        <button type="button" id="clear" class="clear">Сбросить</button>
       </div>
     </main>
 
