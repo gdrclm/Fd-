@@ -9,6 +9,7 @@
   <body>
     <main class="app">
       <h1>🍔 Бургер‑калькулятор</h1>
+      <p id="level-info" class="level-info">Уровень 1</p>
       <p class="hint">
         Повтори эталонный бургер: выбирай ингредиенты и собирай его снизу вверх.
       </p>
@@ -26,14 +27,7 @@
         </section>
       </section>
 
-      <section class="buttons" aria-label="Ингредиенты">
-        <button type="button" data-ingredient="Нижняя булочка">Нижняя булочка</button>
-        <button type="button" data-ingredient="Котлета">Котлета</button>
-        <button type="button" data-ingredient="Сыр">Сыр</button>
-        <button type="button" data-ingredient="Лист салата">Лист салата</button>
-        <button type="button" data-ingredient="Помидор">Помидор</button>
-        <button type="button" data-ingredient="Верхняя булочка">Верхняя булочка</button>
-      </section>
+      <section id="ingredients" class="buttons" aria-label="Ингредиенты"></section>
 
       <div class="controls">
         <button type="button" id="check" class="check">Проверить</button>
