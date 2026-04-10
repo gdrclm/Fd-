@@ -92,6 +92,15 @@ const levels = [
   ['Нижняя булочка', 'Котлета', 'Грибы', 'Сыр', 'Огурец', 'Лук', 'Бекон', 'Соус', 'Лист салата', 'Помидор', 'Верхняя булочка']
 ];
 
+const ingredientVisuals = {
+  'Нижняя булочка': '🥯',
+  'Котлета': '🥩',
+  'Сыр': '🧀',
+  'Лист салата': '🥬',
+  'Помидор': '🍅',
+  'Верхняя булочка': '🍞'
+};
+
 const stack = [];
 let currentLevel = 0;
 
@@ -231,6 +240,25 @@ function startLevel(levelNumber) {
   renderStack();
   setStatus('Новый уровень! Начни с нижней булочки.');
 }
+
+stackEl.addEventListener('click', (event) => {
+  const layer = event.target.closest('.ingredient-layer-clickable');
+
+  if (!layer) {
+    return;
+  }
+
+  const index = Number(layer.dataset.stackIndex);
+
+  if (Number.isNaN(index) || index < 0 || index >= stack.length) {
+    setStatus('Не удалось удалить слой. Попробуй снова.', 'bad');
+    return;
+  }
+
+  const removed = stack.splice(index, 1)[0];
+  renderStack();
+  setStatus(`Удален слой: ${removed}. Продолжай сборку.`);
+});
 
 checkButton.addEventListener('click', () => {
   const correctOrder = getCurrentOrder();
