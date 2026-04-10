@@ -32,6 +32,21 @@ let nextLayerId = 1;
 let dragState = null;
 let layerDragState = null;
 let fxIntervalId = null;
+let physicsFrameId = null;
+
+const ingredientPhysics = {
+  'Нижняя булочка': { mass: 2.2, volume: 2.3, viscosity: 0.82, stickiness: 0.76 },
+  'Котлета': { mass: 2.8, volume: 1.5, viscosity: 0.74, stickiness: 0.7 },
+  'Сыр': { mass: 1.2, volume: 1.1, viscosity: 0.92, stickiness: 0.93 },
+  'Лист салата': { mass: 0.7, volume: 1.4, viscosity: 0.64, stickiness: 0.52 },
+  'Помидор': { mass: 1.1, volume: 1.4, viscosity: 0.67, stickiness: 0.62 },
+  'Верхняя булочка': { mass: 2.1, volume: 2.4, viscosity: 0.8, stickiness: 0.74 },
+  'Бекон': { mass: 1.3, volume: 1.2, viscosity: 0.69, stickiness: 0.66 },
+  'Лук': { mass: 0.8, volume: 1.1, viscosity: 0.72, stickiness: 0.58 },
+  'Огурец': { mass: 0.9, volume: 1.2, viscosity: 0.76, stickiness: 0.63 },
+  'Грибы': { mass: 1.1, volume: 1.4, viscosity: 0.79, stickiness: 0.7 },
+  'Соус': { mass: 0.5, volume: 0.8, viscosity: 0.95, stickiness: 0.96 }
+};
 
 const stackEl = document.getElementById('stack');
 const referenceStackEl = document.getElementById('reference-stack');
@@ -178,6 +193,7 @@ function renderStack() {
       targetLayer.y = y;
       layer.style.left = `${x}px`;
       layer.style.top = `${y}px`;
+      applyStackPhysics(targetLayer.id);
 
       const outsideDropzone = event.clientX < layerDragState.stackRect.left
         || event.clientX > layerDragState.stackRect.right
@@ -227,37 +243,108 @@ function renderStack() {
 
 function spawnFxParticle() {
   const particle = document.createElement('span');
-  const symbols = ['✨', '⭐', '💥', '🎉'];
+  const symbols = ['✨', '⭐', '💥', '🎉', '🔥', '⚡', '🌟'];
   particle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
   particle.className = 'fx-particle';
   particle.style.left = `${20 + Math.random() * 60}%`;
   particle.style.top = `${15 + Math.random() * 65}%`;
-  particle.style.setProperty('--x', `${-60 + Math.random() * 120}px`);
-  particle.style.setProperty('--y', `${-80 + Math.random() * 140}px`);
-  particle.style.setProperty('--rot', `${-90 + Math.random() * 180}deg`);
+  particle.style.setProperty('--x', `${-110 + Math.random() * 220}px`);
+  particle.style.setProperty('--y', `${-150 + Math.random() * 220}px`);
+  particle.style.setProperty('--rot', `${-180 + Math.random() * 360}deg`);
+  particle.style.setProperty('--s', `${0.8 + Math.random() * 1.4}`);
   fxLayerEl.appendChild(particle);
-  setTimeout(() => particle.remove(), 760);
+  setTimeout(() => particle.remove(), 1300);
 }
 
 function showLevelCompleteOverlay() {
+  overlayEl.classList.remove('overlay-visible');
   overlayEl.hidden = false;
+  requestAnimationFrame(() => overlayEl.classList.add('overlay-visible'));
   celebrationBurgerEl.innerHTML = '';
-  const placedOrder = getPlacedOrderByHeight();
-  const visualOrder = [...placedOrder].reverse();
-  visualOrder.forEach((ingredient) => {
-    celebrationBurgerEl.appendChild(createLayer(ingredient));
+  const stackSnapshot = getPlacedSnapshotForCelebration();
+  stackSnapshot.forEach((item, index) => {
+    const layer = createLayer(item.name);
+    layer.classList.add('celebration-layer-absolute');
+    layer.style.left = `${item.x}px`;
+    layer.style.top = `${item.y}px`;
+    layer.style.zIndex = String(100 + index);
+    celebrationBurgerEl.appendChild(layer);
   });
 
   clearInterval(fxIntervalId);
-  for (let i = 0; i < 14; i += 1) spawnFxParticle();
-  fxIntervalId = setInterval(spawnFxParticle, 180);
+  for (let i = 0; i < 24; i += 1) spawnFxParticle();
+  fxIntervalId = setInterval(spawnFxParticle, 95);
 }
 
 function hideLevelCompleteOverlay() {
+  overlayEl.classList.remove('overlay-visible');
   overlayEl.hidden = true;
   clearInterval(fxIntervalId);
   fxLayerEl.innerHTML = '';
   celebrationBurgerEl.innerHTML = '';
+}
+
+function getIngredientPhysics(name) {
+  return ingredientPhysics[name] ?? { mass: 1.3, volume: 1.2, viscosity: 0.75, stickiness: 0.65 };
+}
+
+function applyStackPhysics(activeLayerId) {
+  if (physicsFrameId) cancelAnimationFrame(physicsFrameId);
+  physicsFrameId = requestAnimationFrame(() => {
+    const active = placedLayers.find((entry) => entry.id === activeLayerId);
+    if (!active) return;
+    const stackRect = stackEl.getBoundingClientRect();
+    const activeIndex = placedLayers.findIndex((entry) => entry.id === activeLayerId);
+    if (activeIndex < 0) return;
+
+    placedLayers.forEach((layer, index) => {
+      if (layer.id === activeLayerId) return;
+      const relativeIndexDistance = Math.abs(index - activeIndex);
+      const activePhysics = getIngredientPhysics(active.name);
+      const layerPhysics = getIngredientPhysics(layer.name);
+      const coupling = ((activePhysics.stickiness + layerPhysics.stickiness) / 2) * (1 / (1 + relativeIndexDistance));
+      const fluidity = (activePhysics.viscosity + layerPhysics.viscosity) / 2;
+      const massRatio = activePhysics.mass / (activePhysics.mass + layerPhysics.mass);
+      const targetX = active.x + (active.x - layer.x) * coupling * fluidity * massRatio * 0.2;
+      const volumeLift = (activePhysics.volume - layerPhysics.volume) * 2.6;
+      const targetY = active.y + (index - activeIndex) * 26 - volumeLift;
+      layer.x = clamp(layer.x + (targetX - layer.x) * 0.38, 0, Math.max(stackRect.width - 220, 0));
+      layer.y = clamp(layer.y + (targetY - layer.y) * 0.27, 0, Math.max(stackRect.height - 48, 0));
+    });
+
+    const orderedByY = [...placedLayers].sort((a, b) => a.y - b.y);
+    placedLayers.splice(0, placedLayers.length, ...orderedByY);
+    renderStack();
+  });
+}
+
+function getPlacedSnapshotForCelebration() {
+  if (!placedLayers.length) return [];
+  const bounds = placedLayers.reduce((acc, layer) => {
+    acc.minX = Math.min(acc.minX, layer.x);
+    acc.maxX = Math.max(acc.maxX, layer.x);
+    acc.minY = Math.min(acc.minY, layer.y);
+    acc.maxY = Math.max(acc.maxY, layer.y);
+    return acc;
+  }, {
+    minX: Number.POSITIVE_INFINITY,
+    maxX: Number.NEGATIVE_INFINITY,
+    minY: Number.POSITIVE_INFINITY,
+    maxY: Number.NEGATIVE_INFINITY
+  });
+  const contentWidth = Math.max(bounds.maxX - bounds.minX + 220, 220);
+  const contentHeight = Math.max(bounds.maxY - bounds.minY + 48, 120);
+  const scale = Math.min(1, 240 / contentWidth, 240 / contentHeight);
+  const offsetX = (240 - contentWidth * scale) / 2;
+  const offsetY = (240 - contentHeight * scale) / 2;
+
+  return [...placedLayers]
+    .sort((a, b) => a.y - b.y)
+    .map((layer) => ({
+      name: layer.name,
+      x: offsetX + (layer.x - bounds.minX) * scale,
+      y: offsetY + (layer.y - bounds.minY) * scale
+    }));
 }
 
 function renderIngredientTray() {
