@@ -13,7 +13,7 @@
         <p id="level-info" class="level-info">Уровень 1</p>
         <p id="timer" class="timer">⏱ 01:00</p>
       </div>
-      <p class="hint">
+      <p id="level-hint" class="hint">
         Перетаскивай ингредиенты в бургер игрока в правильные места и уложись в 1 минуту. Нажми на ингредиент внизу, чтобы открыть/скрыть его название.
       </p>
 
@@ -25,7 +25,7 @@
 
         <section class="display" aria-live="polite">
           <h2>Твой бургер (drop zone)</h2>
-          <div id="stack" class="burger-canvas burger-dropzone" role="img" aria-label="Бургер игрока"></div>
+          <div id="stack" class="burger-canvas burger-dropzone scene-root" role="img" aria-label="Бургер игрока"></div>
           <p id="status" class="status">Перетащи «Нижнюю булочку» в бургер.</p>
         </section>
       </section>
@@ -42,6 +42,7 @@
         <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
         <div id="celebration-burger" class="celebration-burger" role="img" aria-label="Твой бургер"></div>
         <h2 id="overlay-title" class="overlay-title">Уровень пройден</h2>
+        <div id="score-breakdown" class="score-breakdown" aria-live="polite"></div>
         <div class="overlay-actions">
           <button type="button" id="restart-level" class="overlay-button clear">Начать заново</button>
           <button type="button" id="next-level" class="overlay-button check">Следующий уровень</button>
@@ -49,6 +50,8 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

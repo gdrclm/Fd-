@@ -1,0 +1,18 @@
+export const SCENE_WIDTH = 420;
+export const SCENE_HEIGHT = 280;
+export const SCENE_BACKGROUND_COLOR = 0xfff7ed;
+
+export const PHYSICS_GRAVITY_Y = 1;
+export const PHYSICS_STEP_MS = 1000 / 60;
+
+export const COLLISION_CATEGORY_INGREDIENT = 0x0001;
+export const COLLISION_CATEGORY_BOUNDARY = 0x0002;
+
+export const DROP_SPAWN_OFFSET_Y = 42;
+export const DROP_INITIAL_VELOCITY_Y = 1.2;
+
+export const SETTLING_ENTER_SPEED = 0.36;
+export const RESTING_SPEED_THRESHOLD = 0.08;
+export const RESTING_ANGULAR_SPEED_THRESHOLD = 0.02;
+export const RESTING_FRAMES_REQUIRED = 14;
+export const MAX_ANGULAR_SPEED = 0.06;
